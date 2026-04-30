@@ -2,18 +2,21 @@ import yfinance as yf
 
 
 def fetch_company_data(ticker):
-    stock = yf.Ticker(ticker)
-    info = stock.info
+    try:
+        stock = yf.Ticker(ticker)
+        info = stock.info
 
-    if not info or info.get("longName") is None:
+        if not info:
+            return None
+
         return {
-            "error": "Invalid ticker symbol. Please enter a valid stock ticker like AAPL or AMZN."
+            "company_name": info.get("longName", ticker),
+            "sector": info.get("sector", "Unknown"),
+            "industry": info.get("industry", "Unknown"),
+            "market_cap": info.get("marketCap", "Unknown"),
+            "summary": info.get("longBusinessSummary", "No summary available")
         }
 
-    return {
-        "name": info.get("longName"),
-        "sector": info.get("sector"),
-        "industry": info.get("industry"),
-        "summary": info.get("longBusinessSummary"),
-        "marketCap": info.get("marketCap")
-    }
+    except Exception as e:
+        print("Error fetching data:", e)
+        return None

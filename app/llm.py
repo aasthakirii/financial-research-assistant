@@ -1,20 +1,14 @@
 def generate_summary(data):
-    company_name = data.get("name", "Unknown Company")
-    sector = data.get("sector", "Unknown Sector")
-    industry = data.get("industry", "Unknown Industry")
-
     return f"""
 Business Overview:
-{company_name} operates in the {sector} sector.
+{data['company_name']} operates in the {data['sector']} sector.
 
-Recent Material Events:
-- No recent events available from current data source.
+Industry:
+{data['industry']}
 
-Key Risks:
-- Market volatility
-- Competitive pressure
-- Regulatory risks
+Market Cap:
+{data['market_cap']}
 
-Market Position:
-Company operates in the {industry} industry.
+Company Summary:
+{data['summary']}
 """

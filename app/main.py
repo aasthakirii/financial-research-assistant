@@ -1,30 +1,51 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from app.data import fetch_company_data
-from app.llm import generate_summary
+from data import fetch_company_data
+from db import init_db, get_cache, save_cache
+from llm import generate_summary
 
 app = FastAPI()
 
+init_db()
 
-class Request(BaseModel):
+
+class TickerRequest(BaseModel):
     ticker: str
 
 
+@app.get("/")
+def home():
+    return {"message": "Financial Research Assistant API Running"}
+
+
 @app.post("/analyze")
-def analyze(req: Request):
-    ticker = req.ticker.upper()
+def analyze(request: TickerRequest):
+    ticker = request.ticker.upper()
 
-    data = fetch_company_data(ticker)
-
-    if "error" in data:
+    # Check cache first
+    cached_data = get_cache(ticker)
+    if cached_data:
         return {
-            "summary": data["error"]
+            "ticker": ticker,
+            "analysis": cached_data
         }
 
-    summary = generate_summary(data)
+    # Fetch company data
+    company_data = fetch_company_data(ticker)
+
+    if not company_data:
+        return {
+            "error": f"Could not fetch data for {ticker}"
+        }
+
+    # Generate summary
+    summary = generate_summary(company_data)
+
+    # Save to cache
+    save_cache(ticker, summary)
 
     return {
         "ticker": ticker,
-        "summary": summary
+        "analysis": summary
     }

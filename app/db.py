@@ -1,34 +1,53 @@
 import sqlite3
+import json
 
-DB_PATH = "cache.db"
+DB_NAME = "cache.db"
 
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("""
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS cache (
             ticker TEXT PRIMARY KEY,
-            summary TEXT
+            data TEXT
         )
     """)
+
     conn.commit()
     conn.close()
 
 
 def get_cache(ticker):
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute("SELECT summary FROM cache WHERE ticker = ?", (ticker,))
-    row = cur.fetchone()
-    conn.close()
-    return row[0] if row else None
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
 
-
-def save_cache(ticker, summary):
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute(
-        "INSERT OR REPLACE INTO cache (ticker, summary) VALUES (?, ?)",
-        (ticker, summary),
+    cursor.execute(
+        "SELECT data FROM cache WHERE ticker=?",
+        (ticker,)
     )
+
+    result = cursor.fetchone()
+    conn.close()
+
+    if result:
+        return result[0]
+
+    return None
+
+
+def save_cache(ticker, data):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        INSERT OR REPLACE INTO cache (ticker, data)
+        VALUES (?, ?)
+        """,
+        (ticker, data)
+    )
+
     conn.commit()
     conn.close()
