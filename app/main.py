@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from data import fetch_company_data
-from db import init_db, get_cache, save_cache
-from llm import generate_summary
+from app.data import fetch_company_data
+from app.db import init_db, get_cache, save_cache
+from app.llm import generate_summary
 
 app = FastAPI()
 
@@ -23,7 +23,6 @@ def home():
 def analyze(request: TickerRequest):
     ticker = request.ticker.upper()
 
-    # Check cache first
     cached_data = get_cache(ticker)
     if cached_data:
         return {
@@ -31,7 +30,6 @@ def analyze(request: TickerRequest):
             "analysis": cached_data
         }
 
-    # Fetch company data
     company_data = fetch_company_data(ticker)
 
     if not company_data:
@@ -39,10 +37,8 @@ def analyze(request: TickerRequest):
             "error": f"Could not fetch data for {ticker}"
         }
 
-    # Generate summary
     summary = generate_summary(company_data)
 
-    # Save to cache
     save_cache(ticker, summary)
 
     return {
