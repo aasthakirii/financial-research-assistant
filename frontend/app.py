@@ -1,25 +1,65 @@
 import streamlit as st
 import requests
 
-# Render backend URL
 BACKEND_URL = "https://financial-research-assistant-e9u7.onrender.com/analyze"
 
 st.set_page_config(
-    page_title="Financial Research Assistant",
-    page_icon="📈",
+    page_title="FinSight AI",
+    page_icon="💖",
     layout="centered"
 )
 
-st.title("Financial Research Assistant")
+st.markdown("""
+<style>
+.stApp {
+    background: linear-gradient(to bottom right, #ffd6e8, #ffe6f2);
+}
 
-ticker = st.text_input(
-    "Enter Ticker (AAPL, MSFT...)"
+h1 {
+    color: black;
+    text-align: center;
+    font-size: 55px;
+    font-weight: bold;
+}
+
+.subtitle {
+    text-align: center;
+    color: black;
+    font-size: 20px;
+    margin-bottom: 30px;
+}
+
+.stButton button {
+    background-color: black;
+    color: white;
+    border-radius: 12px;
+    width: 100%;
+    height: 50px;
+    font-size: 18px;
+}
+
+.result-card {
+    background-color: white;
+    color: black;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0px 4px 20px rgba(0,0,0,0.1);
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown("<h1>💸 FinSight AI</h1>", unsafe_allow_html=True)
+st.markdown(
+    "<p class='subtitle'>Cute but powerful stock analysis ✨📈</p>",
+    unsafe_allow_html=True
 )
 
-if st.button("Analyze"):
+ticker = st.text_input("Enter Stock Ticker", placeholder="AAPL, TSLA, MSFT")
+
+if st.button("Analyze 🚀"):
     if ticker:
         try:
-            with st.spinner("Analyzing company..."):
+            with st.spinner("Analyzing..."):
                 response = requests.post(
                     BACKEND_URL,
                     json={"ticker": ticker},
@@ -30,26 +70,20 @@ if st.button("Analyze"):
                 data = response.json()
 
                 if "analysis" in data:
-                    st.success("Analysis Complete!")
-
-                    st.write(data["analysis"])
-
-                elif "error" in data:
-                    st.error(data["error"])
-
+                    st.markdown(
+                        f"""
+                        <div class="result-card">
+                            <h3>📊 Analysis Report</h3>
+                            <p>{data['analysis']}</p>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
                 else:
-                    st.error("Unexpected response from backend")
+                    st.error("No analysis returned.")
 
             else:
-                st.error(f"Backend Error: {response.status_code}")
-
-        except requests.exceptions.Timeout:
-            st.error(
-                "Request timed out. Render free tier may be waking up. Try again in 30 seconds."
-            )
+                st.error("Backend error")
 
         except Exception as e:
-            st.error(f"Error: {str(e)}")
-
-    else:
-        st.warning("Please enter a stock ticker.")
+            st.error(str(e))
