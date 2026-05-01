@@ -1,25 +1,55 @@
 import streamlit as st
 import requests
 
+# Render backend URL
+BACKEND_URL = "https://financial-research-assistant-e9u7.onrender.com/analyze"
+
+st.set_page_config(
+    page_title="Financial Research Assistant",
+    page_icon="📈",
+    layout="centered"
+)
+
 st.title("Financial Research Assistant")
 
-ticker = st.text_input("Enter Ticker (AAPL, MSFT...)")
+ticker = st.text_input(
+    "Enter Ticker (AAPL, MSFT...)"
+)
 
 if st.button("Analyze"):
-    try:
-        res = requests.post(
-            "http://127.0.0.1:8000/analyze",
-            json={"ticker": ticker}
-        )
+    if ticker:
+        try:
+            with st.spinner("Analyzing company..."):
+                response = requests.post(
+                    BACKEND_URL,
+                    json={"ticker": ticker},
+                    timeout=60
+                )
 
-        print(res.text)  # helps debug
+            if response.status_code == 200:
+                data = response.json()
 
-        if res.status_code != 200:
-            st.error(f"Backend error: {res.text}")
-        else:
-            data = res.json()
-            st.success("Analysis Complete!")
-            st.write(data["summary"])
+                if "analysis" in data:
+                    st.success("Analysis Complete!")
 
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
+                    st.write(data["analysis"])
+
+                elif "error" in data:
+                    st.error(data["error"])
+
+                else:
+                    st.error("Unexpected response from backend")
+
+            else:
+                st.error(f"Backend Error: {response.status_code}")
+
+        except requests.exceptions.Timeout:
+            st.error(
+                "Request timed out. Render free tier may be waking up. Try again in 30 seconds."
+            )
+
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+
+    else:
+        st.warning("Please enter a stock ticker.")
